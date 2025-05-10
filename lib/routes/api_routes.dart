@@ -13,6 +13,9 @@ Router apiRoutes(Database db) {
   // Contractors endpoints
   router.get('/contractors', contractorsHandler.getAll);
   router.get('/contractors/<id>', contractorsHandler.getById);
+  router.post('/contractors', contractorsHandler.create);
+  router.put('/contractors/<id>', contractorsHandler.update);
+  router.delete('/contractors/<id>', contractorsHandler.delete);
 
   // Users endpoints
   router.get('/users', usersHandler.getAll);
