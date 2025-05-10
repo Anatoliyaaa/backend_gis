@@ -12,11 +12,21 @@ class UsersHandler {
 
   // Получение всех пользователей
   Future<Response> getAll(Request req) async {
-    final result = await db.connection.query(
-      'SELECT id, username, role, created_at, updated_at FROM Users',
+    final result = await db.connection.execute(
+      'SELECT id, username, password, role, created_at, updated_at FROM Users',
     );
 
-    final users = result.map((row) => User.fromMap(row.toColumnMap())).toList();
+    final users = result.map((row) {
+      final map = {
+        'id': row[0],
+        'username': row[1],
+        'password': row[2],
+        'role': row[3],
+        'created_at': row[4],
+        'updated_at': row[5],
+      };
+      return User.fromMap(map);
+    }).toList();
 
     return Response.ok(
       jsonEncode(users.map((u) => u.toJson()).toList()),
@@ -26,16 +36,26 @@ class UsersHandler {
 
   // Получение пользователя по ID
   Future<Response> getById(Request req, String id) async {
-    final result = await db.connection.query(
-      'SELECT id, username, role, created_at, updated_at FROM Users WHERE id=@id',
-      substitutionValues: {'id': int.parse(id)},
+    final result = await db.connection.execute(
+      'SELECT id, username, password, role, created_at, updated_at FROM Users WHERE id = @id',
+      parameters: {'id': int.parse(id)},
     );
 
     if (result.isEmpty) {
       return Response.notFound('User not found');
     }
 
-    final user = User.fromMap(result.first.toColumnMap());
+    final row = result.first;
+    final map = {
+      'id': row[0],
+      'username': row[1],
+      'password': row[2],
+      'role': row[3],
+      'created_at': row[4],
+      'updated_at': row[5],
+    };
+
+    final user = User.fromMap(map);
 
     return Response.ok(
       jsonEncode(user.toJson()),
@@ -47,12 +67,12 @@ class UsersHandler {
   Future<Response> createUser(Request req) async {
     final payload = jsonDecode(await req.readAsString());
 
-    await db.connection.query(
+    await db.connection.execute(
       '''
-      INSERT INTO Users (username, password, role) 
+      INSERT INTO Users (username, password, role)
       VALUES (@username, @password, @role)
       ''',
-      substitutionValues: {
+      parameters: {
         'username': payload['username'],
         'password': payload['password'],
         'role': payload['role'],
