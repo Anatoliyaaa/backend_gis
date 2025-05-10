@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:postgres/postgres.dart';
 import 'package:shelf/shelf.dart';
 
 import '../database/database.dart';
@@ -63,15 +64,14 @@ class UsersHandler {
     );
   }
 
-  // Создание нового пользователя
   Future<Response> createUser(Request req) async {
     final payload = jsonDecode(await req.readAsString());
 
     await db.connection.execute(
-      '''
-      INSERT INTO Users (username, password, role)
-      VALUES (@username, @password, @role)
-      ''',
+      Sql.named(
+        'INSERT INTO Users (username, password, role) '
+        'VALUES (@username, @password, @role)',
+      ),
       parameters: {
         'username': payload['username'],
         'password': payload['password'],

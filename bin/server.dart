@@ -15,6 +15,6 @@ void main() async {
 
   final handler = Pipeline().addMiddleware(logRequests()).addHandler(router);
 
-  final server = await serve(handler, InternetAddress.anyIPv4, 8080);
+  final server = await serve(handler, InternetAddress.anyIPv4, 8081);
   print('Server running at ${server.address.host}:${server.port}');
 }
