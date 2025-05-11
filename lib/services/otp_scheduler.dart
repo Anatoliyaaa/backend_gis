@@ -18,9 +18,11 @@ Future<void> updateOtpForAllUsers(Connection connection) async {
     final now = DateTime.now().toUtc();
 
     await connection.execute(
-      '''UPDATE Users
-          SET otp_code = @otp, otp_created_at = @now
-          WHERE username = @username''',
+      Sql.named('''
+      UPDATE Users
+      SET otp_code = @otp, otp_created_at = @now
+      WHERE username = @username
+    '''),
       parameters: {
         'otp': otp,
         'now': now,
@@ -34,8 +36,8 @@ Future<void> updateOtpForAllUsers(Connection connection) async {
 }
 
 void startOtpScheduler(Connection connection) {
-  Timer.periodic(const Duration(minutes: 5), (_) async {
-    print('Обновление OTP для всех пользователей...');
+  Timer.periodic(const Duration(minutes: 1), (_) async {
+    print(' 1 Обновление OTP для всех пользователей...');
     await updateOtpForAllUsers(connection);
   });
 }
