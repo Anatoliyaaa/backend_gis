@@ -23,6 +23,7 @@ Router apiRoutes(Database db) {
   router.post('/users', usersHandler.createUser);
   router.post('/users/login', usersHandler.login);
   router.post('/users/verify_otp', usersHandler.verifyOtp);
+  router.post('/users/send_otp', usersHandler.sendOtp);
 
   return router;
 }

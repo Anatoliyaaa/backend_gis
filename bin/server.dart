@@ -6,10 +6,14 @@ import 'package:shelf_router/shelf_router.dart';
 
 import '../lib/database/database.dart';
 import '../lib/routes/api_routes.dart';
+import '../lib/services/otp_scheduler.dart'; // ← ВАЖНО
 
 void main() async {
   final db = Database();
-  await db.open(); // <-- теперь await здесь корректен и обязателен
+  await db.open();
+
+  // ⏰ Запуск обновления OTP-кодов
+  startOtpScheduler(db.connection);
 
   final router = Router()..mount('/api/', apiRoutes(db));
 

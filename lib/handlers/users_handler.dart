@@ -97,7 +97,7 @@ class UsersHandler {
     return Response.ok('User created successfully');
   }
 
-  // Логин с генерацией и отправкой OTP
+  // Логин
   Future<Response> login(Request req) async {
     final payload = jsonDecode(await req.readAsString());
     final username = payload['username'];
@@ -105,9 +105,9 @@ class UsersHandler {
 
     final result = await db.connection.execute(
       Sql.named('''
-        SELECT id, username, password, role, email, phone, created_at, updated_at
-        FROM Users WHERE username = @username
-      '''),
+      SELECT id, username, password, role, created_at, updated_at
+      FROM Users WHERE username = @username
+    '''),
       parameters: {'username': username},
     );
 
@@ -122,28 +122,52 @@ class UsersHandler {
       return Response(401, body: 'Invalid credentials');
     }
 
-    final email = row[4] as String?;
-    final phone = row[5] as String?;
-
-    await sendOtpToEmail(
-      connection: db.connection,
-      username: username,
-      email: email!,
-      phone: phone,
-    );
-
     final user = {
       'id': row[0],
       'username': row[1],
       'role': row[3],
-      'created_at': row[6].toString(),
-      'updated_at': row[7].toString(),
+      'created_at': row[4].toString(),
+      'updated_at': row[5].toString(),
     };
 
     return Response.ok(
       jsonEncode(user),
       headers: {'Content-Type': 'application/json'},
     );
+  }
+
+  //отправка кода otp
+  Future<Response> sendOtp(Request req) async {
+    final payload = jsonDecode(await req.readAsString());
+    final username = payload['username'];
+
+    final result = await db.connection.execute(
+      Sql.named('''
+      SELECT email, phone FROM Users WHERE username = @username
+    '''),
+      parameters: {'username': username},
+    );
+
+    if (result.isEmpty) {
+      return Response.notFound('Пользователь не найден');
+    }
+
+    final row = result.first;
+    final email = row[0] as String?;
+    final phone = row[1] as String?;
+
+    if (email == null || email.isEmpty) {
+      return Response(400, body: 'Не указан email для пользователя');
+    }
+
+    await sendOtpToEmail(
+      connection: db.connection,
+      username: username,
+      email: email,
+      phone: phone,
+    );
+
+    return Response.ok('OTP отправлен');
   }
 
   // Проверка OTP
