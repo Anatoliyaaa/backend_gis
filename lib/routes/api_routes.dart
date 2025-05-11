@@ -21,6 +21,7 @@ Router apiRoutes(Database db) {
   router.get('/users', usersHandler.getAll);
   router.get('/users/<id>', usersHandler.getById);
   router.post('/users', usersHandler.createUser);
+  router.post('/users/login', usersHandler.login);
 
   return router;
 }

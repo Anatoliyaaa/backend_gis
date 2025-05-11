@@ -81,4 +81,41 @@ class UsersHandler {
 
     return Response.ok('User created successfully');
   }
+
+  Future<Response> login(Request req) async {
+    final payload = jsonDecode(await req.readAsString());
+
+    final username = payload['username'];
+    final password = payload['password'];
+
+    final result = await db.connection.execute(
+      Sql.named('SELECT id, username, password, role, created_at, updated_at '
+          'FROM Users WHERE username = @username'),
+      parameters: {'username': username},
+    );
+
+    if (result.isEmpty) {
+      return Response(401, body: 'Invalid credentials');
+    }
+
+    final row = result.first;
+    final storedPassword = row[2];
+
+    if (storedPassword != password) {
+      return Response(401, body: 'Invalid credentials');
+    }
+
+    final user = {
+      'id': row[0],
+      'username': row[1],
+      'role': row[3],
+      'created_at': row[4].toString(),
+      'updated_at': row[5].toString(),
+    };
+
+    return Response.ok(
+      jsonEncode(user),
+      headers: {'Content-Type': 'application/json'},
+    );
+  }
 }
