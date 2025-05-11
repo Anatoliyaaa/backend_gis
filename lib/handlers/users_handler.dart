@@ -5,6 +5,7 @@ import 'package:shelf/shelf.dart';
 
 import '../database/database.dart';
 import '../models/user.dart';
+import '../services/otp_service.dart';
 
 class UsersHandler {
   final Database db;
@@ -14,7 +15,7 @@ class UsersHandler {
   // Получение всех пользователей
   Future<Response> getAll(Request req) async {
     final result = await db.connection.execute(
-      'SELECT id, username, password, role, created_at, updated_at FROM Users',
+      'SELECT id, username, password, role, email, phone, otp_code, otp_created_at, created_at, updated_at FROM Users',
     );
 
     final users = result.map((row) {
@@ -23,8 +24,12 @@ class UsersHandler {
         'username': row[1],
         'password': row[2],
         'role': row[3],
-        'created_at': row[4],
-        'updated_at': row[5],
+        'email': row[4],
+        'phone': row[5],
+        'otp_code': row[6],
+        'otp_created_at': row[7],
+        'created_at': row[8],
+        'updated_at': row[9],
       };
       return User.fromMap(map);
     }).toList();
@@ -38,7 +43,10 @@ class UsersHandler {
   // Получение пользователя по ID
   Future<Response> getById(Request req, String id) async {
     final result = await db.connection.execute(
-      'SELECT id, username, password, role, created_at, updated_at FROM Users WHERE id = @id',
+      Sql.named('''
+        SELECT id, username, password, role, email, phone, otp_code, otp_created_at, created_at, updated_at
+        FROM Users WHERE id = @id
+      '''),
       parameters: {'id': int.parse(id)},
     );
 
@@ -52,8 +60,12 @@ class UsersHandler {
       'username': row[1],
       'password': row[2],
       'role': row[3],
-      'created_at': row[4],
-      'updated_at': row[5],
+      'email': row[4],
+      'phone': row[5],
+      'otp_code': row[6],
+      'otp_created_at': row[7],
+      'created_at': row[8],
+      'updated_at': row[9],
     };
 
     final user = User.fromMap(map);
@@ -64,33 +76,38 @@ class UsersHandler {
     );
   }
 
+  // Создание нового пользователя
   Future<Response> createUser(Request req) async {
     final payload = jsonDecode(await req.readAsString());
 
     await db.connection.execute(
-      Sql.named(
-        'INSERT INTO Users (username, password, role) '
-        'VALUES (@username, @password, @role)',
-      ),
+      Sql.named('''
+        INSERT INTO Users (username, password, role, email, phone)
+        VALUES (@username, @password, @role, @email, @phone)
+      '''),
       parameters: {
         'username': payload['username'],
         'password': payload['password'],
         'role': payload['role'],
+        'email': payload['email'],
+        'phone': payload['phone'],
       },
     );
 
     return Response.ok('User created successfully');
   }
 
+  // Логин с генерацией и отправкой OTP
   Future<Response> login(Request req) async {
     final payload = jsonDecode(await req.readAsString());
-
     final username = payload['username'];
     final password = payload['password'];
 
     final result = await db.connection.execute(
-      Sql.named('SELECT id, username, password, role, created_at, updated_at '
-          'FROM Users WHERE username = @username'),
+      Sql.named('''
+        SELECT id, username, password, role, email, phone, created_at, updated_at
+        FROM Users WHERE username = @username
+      '''),
       parameters: {'username': username},
     );
 
@@ -105,12 +122,71 @@ class UsersHandler {
       return Response(401, body: 'Invalid credentials');
     }
 
+    final email = row[4] as String?;
+    final phone = row[5] as String?;
+
+    await sendOtpToEmail(
+      connection: db.connection,
+      username: username,
+      email: email!,
+      phone: phone,
+    );
+
     final user = {
       'id': row[0],
       'username': row[1],
       'role': row[3],
-      'created_at': row[4].toString(),
-      'updated_at': row[5].toString(),
+      'created_at': row[6].toString(),
+      'updated_at': row[7].toString(),
+    };
+
+    return Response.ok(
+      jsonEncode(user),
+      headers: {'Content-Type': 'application/json'},
+    );
+  }
+
+  // Проверка OTP
+  Future<Response> verifyOtp(Request req) async {
+    final payload = jsonDecode(await req.readAsString());
+    final username = payload['username'];
+    final otp = payload['otp'];
+
+    final result = await db.connection.execute(
+      Sql.named('''
+        SELECT id, username, role, otp_code, otp_created_at
+        FROM Users WHERE username = @username
+      '''),
+      parameters: {'username': username},
+    );
+
+    if (result.isEmpty) {
+      return Response.forbidden('Пользователь не найден');
+    }
+
+    final row = result.first;
+    final storedOtp = row[3] as String?;
+    final otpCreatedAt = row[4] as DateTime?;
+
+    if (storedOtp == null || otpCreatedAt == null) {
+      return Response(401, body: 'OTP не найден. Запросите повторно.');
+    }
+
+    final now = DateTime.now().toUtc();
+    final isExpired = now.difference(otpCreatedAt).inMinutes >= 5;
+
+    if (isExpired) {
+      return Response(401, body: 'OTP истёк. Запросите новый код.');
+    }
+
+    if (otp != storedOtp) {
+      return Response(401, body: 'Неверный код OTP');
+    }
+
+    final user = {
+      'id': row[0],
+      'username': row[1],
+      'role': row[2],
     };
 
     return Response.ok(

@@ -3,6 +3,10 @@ class User {
   final String username;
   final String password;
   final String role;
+  final String? email;
+  final String? phone;
+  final String? otpCode;
+  final DateTime? otpCreatedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -11,6 +15,10 @@ class User {
     required this.username,
     required this.password,
     required this.role,
+    this.email,
+    this.phone,
+    this.otpCode,
+    this.otpCreatedAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -21,16 +29,28 @@ class User {
       username: map['username'],
       password: map['password'],
       role: map['role'],
-      createdAt: map['created_at'],
-      updatedAt: map['updated_at'],
+      email: map['email'],
+      phone: map['phone'],
+      otpCode: map['otp_code'],
+      otpCreatedAt: map['otp_created_at'] != null
+          ? DateTime.tryParse(map['otp_created_at'].toString())
+          : null,
+      createdAt: DateTime.parse(map['created_at'].toString()),
+      updatedAt: DateTime.parse(map['updated_at'].toString()),
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'username': username,
-        'role': role,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'username': username,
+      'role': role,
+      'email': email,
+      'phone': phone,
+      'otp_code': otpCode,
+      'otp_created_at': otpCreatedAt?.toIso8601String(),
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
 }
