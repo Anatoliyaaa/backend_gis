@@ -36,7 +36,7 @@ Future<void> updateOtpForAllUsers(Connection connection) async {
 }
 
 void startOtpScheduler(Connection connection) {
-  Timer.periodic(const Duration(minutes: 1), (_) async {
+  Timer.periodic(const Duration(minutes: 5), (_) async {
     print(' 1 Обновление OTP для всех пользователей...');
     await updateOtpForAllUsers(connection);
   });
