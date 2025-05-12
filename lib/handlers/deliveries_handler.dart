@@ -17,13 +17,16 @@ class DeliveriesHandler {
             u.id, u.username,
             v.id, v.model, v.license_plate,
             r.id, s.name, s.latitude, s.longitude,
-            e.name, e.latitude, e.longitude
+            e.name, e.latitude, e.longitude,
+            COALESCE(string_agg(c.type || ' (' || c.quantity || ' ' || c.unit || ')', ', '), '') AS cargo_summary
       FROM Deliveries d
       JOIN Users u ON d.driver_id = u.id
       JOIN Vehicles v ON d.vehicle_id = v.id
       JOIN Routes r ON d.route_id = r.id
       JOIN Locations s ON r.start_location_id = s.id
       JOIN Locations e ON r.end_location_id = e.id
+      LEFT JOIN Cargo c ON d.id = c.delivery_id
+      GROUP BY d.id, u.id, v.id, r.id, s.id, e.id
       ORDER BY d.delivery_date DESC
       ''');
 
@@ -54,6 +57,7 @@ class DeliveriesHandler {
                   'longitude': row[14],
                 },
               },
+              'cargo': row[15] ?? '',
             })
         .toList();
 

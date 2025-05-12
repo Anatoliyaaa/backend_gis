@@ -6,6 +6,7 @@ import '../handlers/deliveries_handler.dart';
 import '../handlers/locations_handler.dart';
 import '../handlers/routes_handler.dart';
 import '../handlers/users_handler.dart';
+import '../handlers/vehicles_handler.dart';
 
 Router apiRoutes(Database db) {
   final router = Router();
@@ -15,6 +16,7 @@ Router apiRoutes(Database db) {
   final locationsHandler = LocationsHandler(db);
   final routesHandler = RoutesHandler(db);
   final deliveriesHandler = DeliveriesHandler(db);
+  final vehiclesHandler = VehiclesHandler(db);
 
   // Contractors endpoints
   router.get('/contractors', contractorsHandler.getAll);
@@ -45,6 +47,10 @@ Router apiRoutes(Database db) {
   router.post('/deliveries', deliveriesHandler.create);
   router.put('/deliveries/<id|[0-9]+>', deliveriesHandler.update);
   router.delete('/deliveries/<id|[0-9]+>', deliveriesHandler.delete);
+
+  //Регистрация маршрутов
+  router.get('/vehicles', vehiclesHandler.getAll);
+  router.get('/vehicles/<id|[0-9]+>', vehiclesHandler.getById);
 
   return router;
 }
