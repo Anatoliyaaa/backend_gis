@@ -1,4 +1,3 @@
-import 'package:dotenv/dotenv.dart';
 import 'package:shelf_router/shelf_router.dart';
 
 import '../database/database.dart';
@@ -7,10 +6,11 @@ import '../handlers/deliveries_handler.dart';
 import '../handlers/locations_handler.dart';
 import '../handlers/road_routing_handler.dart';
 import '../handlers/routes_handler.dart';
+import '../handlers/traffic_handler.dart';
 import '../handlers/users_handler.dart';
 import '../handlers/vehicles_handler.dart';
 
-Router apiRoutes(Database db, DotEnv env) {
+Router apiRoutes(Database db, [env]) {
   final router = Router();
 
   final contractorsHandler = ContractorsHandler(db);
@@ -19,6 +19,7 @@ Router apiRoutes(Database db, DotEnv env) {
   final routesHandler = RoutesHandler(db);
   final deliveriesHandler = DeliveriesHandler(db);
   final vehiclesHandler = VehiclesHandler(db);
+  final trafficHandler = TrafficHandler(db);
   final roadRoutingHandler = RoadRoutingHandler(env);
 
   // Contractors endpoints
@@ -36,24 +37,29 @@ Router apiRoutes(Database db, DotEnv env) {
   router.post('/users/verify_otp', usersHandler.verifyOtp);
   router.post('/users/send_otp', usersHandler.sendOtp);
 
-  // Локации
+  // Locations
   router.get('/locations', locationsHandler.getAll);
 
-  // Маршруты
+  // Routes
   router.get('/routes', routesHandler.getAll);
   router.post('/routes', routesHandler.create);
   router.put('/routes/<id|[0-9]+>', routesHandler.update);
   router.delete('/routes/<id|[0-9]+>', routesHandler.delete);
 
-  // Доставки
+  // Deliveries
   router.get('/deliveries', deliveriesHandler.getAll);
   router.post('/deliveries', deliveriesHandler.create);
   router.put('/deliveries/<id|[0-9]+>', deliveriesHandler.update);
   router.delete('/deliveries/<id|[0-9]+>', deliveriesHandler.delete);
 
-  // Транспорт
+  // Vehicles
   router.get('/vehicles', vehiclesHandler.getAll);
   router.get('/vehicles/<id|[0-9]+>', vehiclesHandler.getById);
+
+  // TrafficConditions
+  router.get('/traffic', trafficHandler.getAll);
+  router.get('/traffic/<routeId|[0-9]+>', trafficHandler.getByRoute);
+  router.post('/traffic', trafficHandler.create);
 
   // Дорожная маршрутизация (OpenRouteService)
   router.get('/routes/road', roadRoutingHandler.getRoute);
