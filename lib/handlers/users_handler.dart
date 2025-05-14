@@ -5,7 +5,6 @@ import 'package:shelf/shelf.dart';
 
 import '../database/database.dart';
 import '../models/user.dart';
-import '../services/otp_service.dart';
 
 class UsersHandler {
   final Database db;
@@ -159,13 +158,14 @@ class UsersHandler {
     if (email == null || email.isEmpty) {
       return Response(400, body: 'Не указан email для пользователя');
     }
-
+/*
     await sendOtpToEmail(
       connection: db.connection,
       username: username,
       email: email,
       phone: phone,
     );
+    */
 
     return Response.ok('OTP отправлен');
   }

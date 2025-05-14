@@ -35,7 +35,7 @@ Future<void> sendOtpToEmail({
       'username': username,
     },
   );
-  print('Содержимое .env: ${env.map}');
+  //print('Содержимое .env: ${env.map}');
   //final env2 = DotEnv()..load();
   //print('Содержимое .env: ${env2.map}');
   // EMAIL

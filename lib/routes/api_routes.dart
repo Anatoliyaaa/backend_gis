@@ -3,9 +3,11 @@ import 'package:shelf_router/shelf_router.dart';
 import '../database/database.dart';
 import '../handlers/contractors_handler.dart';
 import '../handlers/deliveries_handler.dart';
+import '../handlers/driver_location_handler.dart';
 import '../handlers/locations_handler.dart';
 import '../handlers/road_routing_handler.dart';
 import '../handlers/routes_handler.dart';
+import '../handlers/stats_handler.dart';
 import '../handlers/traffic_handler.dart';
 import '../handlers/users_handler.dart';
 import '../handlers/vehicles_handler.dart';
@@ -21,6 +23,8 @@ Router apiRoutes(Database db, [env]) {
   final vehiclesHandler = VehiclesHandler(db);
   final trafficHandler = TrafficHandler(db);
   final roadRoutingHandler = RoadRoutingHandler(env);
+  final statsHandler = StatsHandler(db);
+  final locationHandler = DriverLocationHandler(db);
 
   // Contractors endpoints
   router.get('/contractors', contractorsHandler.getAll);
@@ -63,6 +67,15 @@ Router apiRoutes(Database db, [env]) {
 
   // Дорожная маршрутизация (OpenRouteService)
   router.get('/routes/road', roadRoutingHandler.getRoute);
+
+  // обновление статистики для логиста по доставкам
+  router.get('/stats/deliveries', statsHandler.getDeliveriesCount);
+  router.get('/stats/routes', statsHandler.getRoutesCount);
+  router.get('/stats/vehicles-in-transit', statsHandler.getVehiclesInTransit);
+
+  //трекинг водителей
+  router.post('/drivers/location', locationHandler.updateLocation);
+  router.get('/drivers/location', locationHandler.getAllDriverPositions);
 
   return router;
 }
