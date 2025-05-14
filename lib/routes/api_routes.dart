@@ -76,6 +76,7 @@ Router apiRoutes(Database db, [env]) {
   //трекинг водителей
   router.post('/drivers/location', locationHandler.updateLocation);
   router.get('/drivers/location', locationHandler.getAllDriverPositions);
+  router.get('/deliveries/driver/<driverId>', deliveriesHandler.getForDriver);
 
   return router;
 }
