@@ -3,6 +3,7 @@ import 'package:shelf_router/shelf_router.dart';
 import '../database/database.dart';
 import '../handlers/contractors_handler.dart';
 import '../handlers/deliveries_handler.dart';
+import '../handlers/documents_handler.dart';
 import '../handlers/driver_location_handler.dart';
 import '../handlers/locations_handler.dart';
 import '../handlers/road_routing_handler.dart';
@@ -25,7 +26,7 @@ Router apiRoutes(Database db, [env]) {
   final roadRoutingHandler = RoadRoutingHandler(env);
   final statsHandler = StatsHandler(db);
   final locationHandler = DriverLocationHandler(db);
-
+  final documentsHandler = DocumentsHandler(db);
   // Contractors endpoints
   router.get('/contractors', contractorsHandler.getAll);
   router.get('/contractors/<id>', contractorsHandler.getById);
@@ -77,6 +78,9 @@ Router apiRoutes(Database db, [env]) {
   router.post('/drivers/location', locationHandler.updateLocation);
   router.get('/drivers/location', locationHandler.getAllDriverPositions);
   router.get('/deliveries/driver/<driverId>', deliveriesHandler.getForDriver);
+  //вывод документом
+  router.get('/documents/<deliveryId|[0-9]+>',
+      documentsHandler.getDocumentsByDelivery);
 
   return router;
 }
