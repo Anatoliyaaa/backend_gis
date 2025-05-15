@@ -5,6 +5,7 @@ import '../handlers/contractors_handler.dart';
 import '../handlers/deliveries_handler.dart';
 import '../handlers/documents_handler.dart';
 import '../handlers/driver_location_handler.dart';
+import '../handlers/exchange_handler.dart';
 import '../handlers/locations_handler.dart';
 import '../handlers/road_routing_handler.dart';
 import '../handlers/routes_handler.dart';
@@ -27,6 +28,8 @@ Router apiRoutes(Database db, [env]) {
   final statsHandler = StatsHandler(db);
   final locationHandler = DriverLocationHandler(db);
   final documentsHandler = DocumentsHandler(db);
+  final exchangeHandler = ExchangeHandler(db);
+
   // Contractors endpoints
   router.get('/contractors', contractorsHandler.getAll);
   router.get('/contractors/<id>', contractorsHandler.getById);
@@ -81,6 +84,11 @@ Router apiRoutes(Database db, [env]) {
   //вывод документом
   router.get('/documents/<deliveryId|[0-9]+>',
       documentsHandler.getDocumentsByDelivery);
+
+  // интеграция ERP
+  router.get('/exchange/ping', exchangeHandler.ping);
+  router.get('/exchange/deliveries', exchangeHandler.exportDeliveries);
+  router.post('/exchange/deliveries', exchangeHandler.importDeliveries);
 
   return router;
 }
